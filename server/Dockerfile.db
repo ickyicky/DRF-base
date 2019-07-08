@@ -1,0 +1,11 @@
+# Set the base image to Postgres
+FROM postgres:9.6
+
+# Change timezone
+RUN mv /etc/localtime /etc/localtime.old && cp /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
+
+# Add poland locale
+RUN sed -i 's|# pl_PL ISO-8852-2|pl_PL ISO-8852-2|' /etc/locale.gen && \
+    sed -i 's|# pl_PL.UTF-8 UTF-8|pl_PL.UTF-8 UTF-8|' /etc/locale.gen && \
+    sed -i 's|# en_US.UTF-8 UTF-8|en_US.UTF-8 UTF-8|' /etc/locale.gen
+RUN locale-gen && echo LANG=pl_PL.UTF-8 >> /etc/default/locale 

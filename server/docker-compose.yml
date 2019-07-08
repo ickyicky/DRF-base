@@ -1,0 +1,43 @@
+version: '3.5'
+
+networks:
+  project-network:
+    driver: bridge
+
+services:
+  app:
+    restart: unless-stopped
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: project-server
+    container_name: project-app
+    ports:
+      - "8080:80"
+    depends_on:
+      - "db"
+    volumes:
+      - .:/app:z
+      - ./medias:/var/www/media:z
+      - ./log:/log:z
+    env_file:
+      - .env
+    command: >
+      bash -c "./bin/wait-for-it.sh -t 360 ${POSTGRES_HOST}:${POSTGRES_PORT}
+      && ./manage.py makemigrations
+      && ./manage.py migrate --no-input
+      && gunicorn project.wsgi --bind 0.0.0.0:80 --workers 2 --timeout 1000000 --worker-class gevent --reload --access-logfile=/log/project-app.log"
+  db:
+    build:
+      dockerfile: Dockerfile.db
+      context: .
+    image: project-db
+    restart: unless-stopped
+    container_name: project-db
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data:z
+      - ./log:/log:z
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
