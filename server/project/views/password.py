@@ -1,5 +1,4 @@
-from six import text_type
-from django.conf import settings
+# from six import text_type
 from django.http import JsonResponse
 from django.views import View
 from rest_framework import status
@@ -7,10 +6,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
-from jose import jwt
-from project.tasks import mail
+# from project.tasks import mail
 from drf_yasg.utils import swagger_auto_schema
-from project.auth.token import InvalidToken, PassResetToken
+from project.auth.authentication import authenticate
+from project.auth.token import PassResetToken, InvalidToken
 from project.views.base import ModelViewSet
 from project.models.user import UserModel
 from project.models.password import DefaultPasswordModel
@@ -85,11 +84,6 @@ class ChangeDefaultPasswordViewSet(ModelViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
-    def get_serializer_context(self):
-        if not self.queryset.exists():
-            return {"current": None}
-        return {"current": self.queryset.filter()[:1].get()}
-
 
 class RestorePasswordViewSet(ModelViewSet):
     """Restore password
@@ -116,13 +110,15 @@ class RestorePasswordViewSet(ModelViewSet):
 
         user = serializer.validated_data["username"]
         token = PassResetToken.get_token_for_user(user)
-        kwargs = {
-            "recipients": [],
-            "subject": "Example subject",
-            "message": text_type(token.encode()),
-        }
 
-        mail.apply_async(kwargs=kwargs)
+        # Example handling restore_password request:
+        # kwargs = {
+        #     "recipients": [],
+        #     "subject": "Example subject",
+        #     "message": text_type(token.encode()),
+        # }
+        #
+        # mail.apply_async(kwargs=kwargs)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -163,20 +159,9 @@ class ResetPasswordViewSet(View):
 
     def get(self, request, token):
         try:
-            token = PassResetToken(token=token)
-            user_id = token.payload[settings.JWT_AUTH["USER_ID_CLAIM"]]
-
-            user = UserModel.objects.get(id=user_id)
-
-            token.verify(valid_time=user.last_password_change)
-        except (
-            jwt.ExpiredSignatureError,
-            jwt.JWTError,
-            jwt.JWTClaimsError,
-            UserModel.DoesNotExist,
-            InvalidToken,
-        ):
-            return JsonResponse({"Error": "Token is invalid"}, status="403")
+            user, token = authenticate(PassResetToken, token)
+        except InvalidToken:
+            return JsonResponse({"Message": "Invalid request, check if token is valid"}, status="400")
 
         user.restore_default_password()
 

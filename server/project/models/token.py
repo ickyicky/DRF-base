@@ -11,9 +11,11 @@ class TokenModel(models.Model):
     )
     password = models.CharField(max_length=128)
     remember_me = models.BooleanField(
-        help_text="""If this attribute has a value of True the refresh token will
-        be valid for a time defined by the `REMEMBER_ME_REFRESH_TOKEN_LIFETIME`
-        settings variable (30 days by default).
+        help_text="""
+        If this attribute has a value of True the refresh token
+        will be valid for a time defined by the
+        `REMEMBER_ME_REFRESH_TOKEN_LIFETIME` settings
+        variable (30 days by default).
         """
     )
 

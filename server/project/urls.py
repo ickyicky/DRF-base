@@ -13,7 +13,9 @@ from project.views.cookie import CookieViewSet
 from project.views.password import (
     ResetPasswordViewSet,
     ChangePasswordViewSet,
+    ChangeDefaultPasswordViewSet,
     RestorePasswordViewSet,
+    ResetPasswordViewSet,
     RestoreDefaultPasswordViewSet,
 )
 
@@ -44,17 +46,22 @@ urlpatterns = [
     url(
         regex=r"^users/me/restore_password$",
         view=RestorePasswordViewSet.as_view({"post": "restore_password"}),
-        name="user-restore_password",
+        name="user-restore-password",
     ),
     url(
         regex=r"^users/default/(?P<user_id>[^/.]+)/restore_password$",
         view=RestoreDefaultPasswordViewSet.as_view({"post": "restore_password"}),
-        name="user-restore_default_password",
+        name="user-restore-default_password",
     ),
     url(
         regex=r"^users/me/change_password$",
         view=ChangePasswordViewSet.as_view({"post": "change_password"}),
-        name="user-change_password",
+        name="user-change-password",
+    ),
+    url(
+        regex=r"^users/default/change_default_password$",
+        view=ChangeDefaultPasswordViewSet.as_view({"post": "change_password"}),
+        name="user-change-default-password",
     ),
     url(
         r"^documentation/$",

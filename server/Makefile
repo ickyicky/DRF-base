@@ -15,7 +15,7 @@ clean:
 test:
 	@docker-compose run app bash -c "\
 		set -x && \
-		DEBUG=0 coverage run --source . -m py.test -svv --html=htmltest/report.html --self-contained-html && \
+		DEBUG=0 coverage run --source . --omit=*tests*,setup.py,project/wsgi.py,manage.py,project/docs/inspectors.py,project/tasks.py  -m py.test -svv --html=htmltest/report.html --self-contained-html && \
 		coverage report && \
 		coverage html \
 	"

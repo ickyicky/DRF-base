@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 
 import pytest
 from faker import Faker
@@ -7,9 +6,9 @@ from faker import Faker
 
 @pytest.mark.django_db
 def test_token_expiration_after_password_change(client, user_factory):
-    u = user_factory()
     password = Faker().password(length=8, digits=True, upper_case=True)
-    u.set_password(password)
+    u = user_factory()
+    u.set_password(password, silent=True)
     u.save()
 
     def test_valid(client, status_code):
@@ -68,7 +67,7 @@ def test_token_expiration_after_password_change(client, user_factory):
 def test_token_refresh(client, user_factory):
     u = user_factory()
     password = Faker().password(length=8, digits=True, upper_case=True)
-    u.set_password(password)
+    u.set_password(password, silent=True)
     u.save()
 
     def test_valid(client, status_code):

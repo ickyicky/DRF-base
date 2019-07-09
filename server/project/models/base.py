@@ -2,6 +2,10 @@ from django.db import models
 
 
 class BaseModel(models.Model):
+    """
+    Base model, contains created and modified date.
+    """
+
     class Meta:
         abstract = True
 

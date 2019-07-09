@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from drf_yasg import openapi
-from project.utils import make_utc
+from project.utils import make_aware
 from drf_yasg.utils import swagger_auto_schema
 from project.views.base import ModelViewSet
 from project.serializers.cookie import CookieSerializer
@@ -71,7 +71,7 @@ class CookieViewSet(ModelViewSet):
             response.set_cookie(
                 key=settings.COOKIE_AUTH["COOKIE_NAME"],
                 value=serializer.validated_data["token"],
-                expires=make_utc(
+                expires=make_aware(
                     datetime.utcnow()
                     + settings.COOKIE_AUTH["REMEMBER_ME_COOKIE_LIFETIME"]
                 ),

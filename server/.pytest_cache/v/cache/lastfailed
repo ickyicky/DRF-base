@@ -1,3 +1,0 @@
-{
-  "tests/views/test_token.py::test_token_expiration_after_password_change": true
-}

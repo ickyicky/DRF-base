@@ -18,6 +18,10 @@ class ChangePasswordModel(models.Model):
 
 
 class DefaultPasswordModel(BaseModel):
+    """
+    Default password for new users. The latest one is always choosen.
+    """
+
     password = models.CharField(max_length=128)
 
     class Meta:
@@ -25,9 +29,18 @@ class DefaultPasswordModel(BaseModel):
 
     @classmethod
     def get_default(cls):
-        return cls.objects.latest()
+        """
+        Return latest default password, if not present, returns None
+        """
+        if not cls.objects.exists():
+            return None
+
+        return cls.objects.latest("-created_date").password
 
     def set_password(self, password):
+        """
+        Sets default password, encrypts it.
+        """
         self.password = make_password(password)
 
 
@@ -41,6 +54,10 @@ class ChangeDefaultPasswordModel(models.Model):
 
     class Meta:
         managed = False
+
+    @classmethod
+    def get_default(cls):
+        return DefaultPasswordModel.get_default()
 
 
 class RestorePasswordModel(models.Model):

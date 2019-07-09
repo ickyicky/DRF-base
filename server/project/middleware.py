@@ -12,7 +12,7 @@ class WebRequestMiddleware:
         return response
 
     def save(self, request, response):
-        if not hasattr(request, "user") and response.status_code < 400:
+        if response.status_code >= 300:
             req = response.__dict__.get("renderer_context", {}).get("request", None)
             if req:
                 logging.error("REQUEST:")

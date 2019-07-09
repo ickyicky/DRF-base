@@ -1,21 +1,10 @@
 from calendar import timegm
-from datetime import datetime, timedelta
 
-import pytz
 from django.conf import settings
-from django.utils.timezone import is_naive, make_aware
-from rest_framework import exceptions, status
-
-from project.utils import now
+from rest_framework import status, exceptions
 
 from jose import JOSEError, jwt
-
-
-def make_utc(datetime_):
-    if settings.USE_TZ and is_naive(datetime_):
-        return make_aware(datetime_, timezone=pytz.timezone(settings.TIME_ZONE))
-
-    return datetime_
+from project.utils import now, datetime, make_naive_utc
 
 
 class InvalidToken(exceptions.AuthenticationFailed):
@@ -38,13 +27,13 @@ class Token:
 
     def __init__(self, token=None, verify=True):
         if self.token_type is None:
-            raise InvalidToken("Nie można utworzyc tokenu bez zdefiniowanego typu.")
+            raise InvalidToken("Cannot create token without defined type.")
 
         if self.lifetime is None:
-            raise InvalidToken("CNie można utworzyć tokenu bez zdefiniowanego czasu.")
+            raise InvalidToken("Cannot create token without defined lifetime.")
 
         self.token = token
-        self.current_time = datetime.utcnow()
+        self.current_time = now()
 
         if token is not None:
             self.payload = self.decode()
@@ -85,22 +74,27 @@ class Token:
         self.verify_token_type()
 
     def additional_verification(self, valid_time, claim="exp"):
-        if not valid_time:
+        """
+        Addictional verification makes sure that user didn't change password
+        since this token was created. You can disable this option by setting
+        JWT_AUTH.LOGOUT_AFTER_PASS_CHANGE to False
+        """
+        if (
+            not settings.JWT_AUTH.get("LOGOUT_AFTER_PASS_CHANGE", True)
+            or not valid_time
+        ):
             return
+
+        valid_time = make_naive_utc(valid_time.replace(microsecond=0))
 
         try:
             _claim_value = self.payload["_" + claim]
         except KeyError:
             raise InvalidToken(f"Token nie ma czasu użyteczności '{claim}'.")
 
-        _claim_time = make_utc(datetime.utcfromtimestamp(_claim_value))
-        print(_claim_value)
-        print(int(valid_time.timestamp()))
-        #
-        # if _claim_time < valid_time:
-        #     raise InvalidToken(f"Czas '{claim}' wygasł.")
+        _claim_time = datetime.utcfromtimestamp(_claim_value)
 
-        if _claim_value < int(valid_time.timestamp()):
+        if _claim_time <= valid_time:
             raise InvalidToken(f"Czas '{claim}' wygasł.")
 
     def verify_token_type(self):
@@ -110,10 +104,10 @@ class Token:
         try:
             token_type = self.payload[settings.JWT_AUTH["TOKEN_TYPE_CLAIM"]]
         except KeyError:
-            raise InvalidToken("Token nie ma zdefiniowanego typu.")
+            raise InvalidToken("Token has no defined type.")
 
         if self.token_type != token_type:
-            raise InvalidToken("Token ma zdefiniowany niepoprawny typ.")
+            raise InvalidToken("Token has incorrect type.")
 
     def set_exp(self, claim="exp", from_time=None, lifetime=None):
         """
@@ -133,14 +127,16 @@ class Token:
         Checks whether a timestamp value in the given claim has passed.
         """
         if current_time is None:
-            current_time = make_utc(self.current_time)
+            current_time = self.current_time
+
+        current_time = make_naive_utc(current_time)
 
         try:
             claim_value = self.payload[claim]
         except KeyError:
             raise InvalidToken(f"Token nie ma czasu użyteczności '{claim}'.")
 
-        claim_time = make_utc(datetime.utcfromtimestamp(claim_value))
+        claim_time = datetime.utcfromtimestamp(claim_value)
 
         if claim_time <= current_time:
             raise InvalidToken(f"Czas '{claim}' wygasł.")

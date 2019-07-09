@@ -1,6 +1,7 @@
 from django.core.management import BaseCommand
 
-from project.models.user import Role, UserModel, DefaultPasswordModel
+from project.models.user import Role, UserModel
+from project.models.password import DefaultPasswordModel
 
 
 class Command(BaseCommand):
