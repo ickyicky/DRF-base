@@ -1,6 +1,7 @@
 # from six import text_type
 from django.http import JsonResponse
 from django.views import View
+from django.utils.six import text_type
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -120,7 +121,9 @@ class RestorePasswordViewSet(ModelViewSet):
         #
         # mail.apply_async(kwargs=kwargs)
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            status=status.HTTP_200_OK, data={"token": text_type(token.encode())}
+        )
 
 
 class RestoreDefaultPasswordViewSet(ModelViewSet):
@@ -161,7 +164,9 @@ class ResetPasswordViewSet(View):
         try:
             user, token = authenticate(PassResetToken, token)
         except InvalidToken:
-            return JsonResponse({"Message": "Invalid request, check if token is valid"}, status="400")
+            return JsonResponse(
+                {"Message": "Invalid request, check if token is valid"}, status="400"
+            )
 
         user.restore_default_password()
 

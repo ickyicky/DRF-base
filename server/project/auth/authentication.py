@@ -19,17 +19,20 @@ def authenticate(token_cls, token):
 
         user = model.objects.get(id=user_id, is_active=True)
         token.verify(valid_time=user.last_password_change)
-    except (jwt.ExpiredSignatureError, jwt.JWTError, jwt.JWTClaimsError):
+    except (
+        jwt.ExpiredSignatureError,
+        jwt.JWTError,
+        jwt.JWTClaimsError,
+        model.DoesNotExist,
+    ):
         return HttpResponse({"Error": "Token is invalid"}, status="403")
-    except model.DoesNotExist:
-        return HttpResponse({"Error": "Internal server error"}, status="500")
 
     return (user, token)
 
 
-
 class JWTAuthentication(BaseAuthentication):
     model = None
+
     def authenticate(self, request):
         """
         Checks if header is valid and then performs authorization.

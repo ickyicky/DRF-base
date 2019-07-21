@@ -1,5 +1,3 @@
-from re import match
-
 from django.utils.six import text_type
 from django.contrib.auth import authenticate
 
@@ -21,15 +19,6 @@ class CookieSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
-        user = None
-
-        forbidden = r"[A-Za-z0-9\.]+@[A-Za-z0-9]+\.[A-Za-z0-9]+"
-
-        if match(forbidden, attrs["username"]):
-            raise serializers.ValidationError(
-                "Logowanie do panelu jest tylko po loginie z ActiveDirectory"
-            )
-
         user = authenticate(
             **{"username": attrs["username"], "password": attrs["password"]}
         )

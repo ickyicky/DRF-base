@@ -109,3 +109,24 @@ def test_token_refresh(client, user_factory):
     client.credentials(HTTP_AUTHORIZATION="Bearer " + access)
 
     test_valid(client, 200)
+
+
+@pytest.mark.django_db
+def test_token_invalid_password(client, user_factory):
+    password = Faker().password(length=8, digits=True, upper_case=True)
+    u = user_factory()
+    u.set_password(password, silent=True)
+    u.save()
+
+    payload = {
+        "data": {
+            "type": "TokenModel",
+            "attributes": {"username": u.username, "password": password + "a"},
+        }
+    }
+
+    response = client.post(
+        "/token", json.dumps(payload), content_type="application/vnd.api+json"
+    )
+
+    assert response.status_code == 400

@@ -48,7 +48,7 @@ class UserModel(BaseModel, AbstractUser):
     @property
     def last_activity(self):
         if self.activity.exists():
-            return self.activity.order_by("-time")[:1].get().time
+            return self.activity.latest("-time").time
         return None
 
     def set_password(self, password, silent=False):

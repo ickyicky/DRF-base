@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from project.utils import now
+from datetime import timedelta
 
 from django.contrib.auth.hashers import check_password
 
-from project.utils import make_aware
 from project.models.user import UserModel
 from project.models.password import (
     ChangePasswordModel,
@@ -75,9 +75,7 @@ class ChangeDefaultPasswordSerializer(ModelSerializer):
     def validate_old_password(self, data):
         current = self.Meta.model.get_default()
 
-        if current and not check_password(
-            data, current.password
-        ):
+        if current and not check_password(data, current):
             raise serializers.ValidationError("Niepoprawne dane.")
 
         return data
@@ -112,8 +110,7 @@ class RestorePasswordSerializer(serializers.ModelSerializer):
 
         if (
             user.last_password_change
-            and make_aware(datetime.utcnow() - timedelta(minutes=5))
-            < user.last_password_change
+            and now() - user.last_password_change < timedelta(minutes=5)
         ):
             raise serializers.ValidationError(
                 "Hasło było zmieniane w niedawnym czasie, proszę spróbować za 5 minut."

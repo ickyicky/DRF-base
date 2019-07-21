@@ -1,11 +1,8 @@
-from django.conf import settings
-from django.http import HttpResponse
 from django.utils.six import text_type
 from django.contrib.auth import authenticate
 
-from jose import jwt
 from project.auth.token import RefreshToken
-from project.models.user import UserModel
+from project.auth.authentication import authenticate as validate_token
 from project.models.token import (
     TokenModel,
     TokenPairModel,
@@ -86,19 +83,8 @@ class TokenRefreshSerializer(serializers.ModelSerializer):
         help_text="Token used to generate a new Access Token."
     )
 
-    def validate(self, attrs):
-        try:
-            refresh = RefreshToken(attrs["refresh_token"])
-
-            user_id = refresh.payload[settings.JWT_AUTH["USER_ID_CLAIM"]]
-
-            user = UserModel.objects.get(id=user_id, is_active=True)
-            refresh.verify(valid_time=user.last_password_change)
-        except (jwt.ExpiredSignatureError, jwt.JWTError, jwt.JWTClaimsError):
-            return HttpResponse({"Error": "Token is invalid"}, status="403")
-        except UserModel.DoesNotExist:
-            return HttpResponse({"Error": "Internal server error"}, status="500")
-
+    def validate(self, atts):
+        user, refresh = validate_token(RefreshToken, atts["refresh_token"])
         data = {"access": text_type(refresh.access_token.encode())}
 
         return data
