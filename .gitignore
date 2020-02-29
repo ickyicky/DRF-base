@@ -1,0 +1,7 @@
+*.pyc
+.bash_history
+*/.bash_history
+.python_history
+*/.python_history
+server/log
+*/.ipython/*

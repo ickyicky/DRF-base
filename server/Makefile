@@ -1,59 +1,48 @@
+VERSION=`git rev-parse HEAD`
+APPNAME=api
+PROJECT=project
+APPVERSION=0.1
+
 .PHONY: help
 help:
-	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+	@echo "project's api avalibe build quick options:"
+	@echo "  clean     - clean developpement folder"
+	@echo "  black     - formats all python source files"
+	@echo "  base      - builds project base"
+	@echo "  build     - builds docker container"
+	@echo "  test      - run tests"
 
 .PHONY: clean
 clean:
 	find . -type d -name __pycache__ -exec rm -r {} \+
 	find . -type f -name '*.pyc' -exec rm -r {} \+
+	rm -rf static
 	rm -rf .pytest_cache
 	rm -rf htmltest
 	rm -rf htmlcov
-	rm -f celerybeat.pid
 
-.PHONY: test
-test:
-	@docker-compose run app bash -c "\
-		set -x && \
-		DEBUG=0 coverage run --source . --omit=*tests*,setup.py,project/wsgi.py,manage.py,project/docs/inspectors.py,project/tasks.py  -m py.test -svv --html=htmltest/report.html --self-contained-html && \
-		coverage report && \
-		coverage html \
-	"
-
-.PHONY: lint
-lint:
-	isort --settings-path config --recursive .
-	black project --exclude project/migrations
-	pylint --rcfile config/pylintrc -r n project
-
-.PHONY: debug
-debug:
-	docker-compose run --rm --service-ports app
-
-.PHONY: up
-up:
-	docker-compose up -d
-
-.PHONY: down
-down:
-	docker-compose down
-
-.PHONY: app
-app:
-	docker-compose exec app bash
-
-.PHONY: db
-db:
-	docker-compose exec db bash -c 'psql --user=postgres'
-
-.PHONY: log
-log:
-	docker-compose logs app
-
-.PHONY: build
-build:
-	docker build -t project/project-server:devel -f Dockerfile . --network=host
+.PHONY: black
+black:
+	black . *.py -l 120
 
 .PHONY: base
 base:
-	docker build -t project/project-server-base:devel -f Dockerfile.base .
+	docker build -t project/api-base -f Dockerfile.base .
+
+.PHONY: build
+build:
+	docker-compose build \
+		--build-arg version="$(VERSION)" \
+		--build-arg appname="$(APPNAME)" \
+		--build-arg project="$(PROJECT)" \
+		--build-arg appversion="$(APPVERSION)" \
+		app
+
+.PHONY: test
+test:
+	docker-compose run app bash -c "\
+		set -x && \
+		DEBUG=0 coverage run --source api --omit api/wsgi.py,api/asgi.py,api/migrations,api/settings.py,api/urls.py -m py.test -svv --html=htmltest/report.html --self-contained-html && \
+		coverage report && \
+		coverage html \
+	"

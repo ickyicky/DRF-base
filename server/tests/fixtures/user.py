@@ -4,7 +4,8 @@ from copy import deepcopy
 
 import pytest
 from faker import Faker
-from project.models.user import Role, UserModel
+
+from api.models.user import Role, UserModel
 
 USERNAME_CHARSET = "0123456789"
 
@@ -27,9 +28,8 @@ def generate_username():
 def user_attributes():
     return {
         "username": generate_username(),
-        "first_name": Faker().first_name(),
-        "last_name": Faker().last_name(),
         "password": Faker().password(length=8, digits=True, upper_case=True, lower_case=True),
+        "role": Role.USER.name,
     }
 
 

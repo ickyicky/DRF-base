@@ -1,17 +1,23 @@
-FROM project/project-server-base:devel
+FROM project/api-base
 
-ENV DJANGO_SETTINGS_MODULE project.settings
+ENV DJANGO_SETTINGS_MODULE api.settings
 
-RUN mkdir /log
-RUN echo "" > /log/debug.log
-RUN chmod +rw /log/debug.log
+RUN mkdir /opt/app/log
 
-WORKDIR /app
+ARG version
+ARG appname
+ARG project
+ARG appversion
+LABEL bsp_project=$project \
+      bsp_appname=$api \
+      bsp_version=$version
 
-COPY setup.py /app
-RUN python setup.py develop
+WORKDIR /opt/app
 
-COPY . /app
+COPY setup.py /opt/app
+RUN python3 setup.py develop --user
+
+COPY . /opt/app
 RUN ./bin/collectstatic-nosettings.py --env-file ../.env
 
-CMD ["gunicorn", "project.wsgi", "--bind", "0.0.0.0:80", "--workers", "2", "--worker-class", "gevent", "--access-logfile=-"]
+CMD ["gunicorn", "api.wsgi", "--bind", "0.0.0.0:8080", "--workers", "4", "--worker-class", "gevent", "--access-logfile=-"]

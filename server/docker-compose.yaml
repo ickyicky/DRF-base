@@ -1,0 +1,39 @@
+version: '3'
+
+networks:
+  project:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  db:
+    image: centos/postgresql-96-centos7
+    restart: unless-stopped
+    container_name: database
+    volumes:
+      - pgdata:/var/lib/pgsql/data
+    environment:
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=project
+    networks:
+      - project
+
+  app:
+    image: project/api:devel
+    build:
+      dockerfile: Dockerfile
+      context: .
+    restart: unless-stopped
+    container_name: app
+    volumes:
+      - .:/opt/app:z
+      - ./log:/log:z
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - project
