@@ -32,12 +32,6 @@ class UserModel(BaseModel, AbstractUser):
         help_text="Date and time when user changed the password for the last time.",
     )
 
-    @property
-    def last_activity(self):
-        if self.activity.exists():
-            return self.activity.order_by("-time")[:1].get().time
-        return None
-
 
 class ChangePasswordModel(models.Model):
     """

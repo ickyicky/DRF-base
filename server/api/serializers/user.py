@@ -9,7 +9,6 @@ class UserModelSerializer(ModelSerializer):
             "id",
             "username",
             "last_login",
-            "last_activity",
             "first_name",
             "last_name",
             "email",
