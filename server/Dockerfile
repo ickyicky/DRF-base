@@ -20,4 +20,4 @@ RUN python3 setup.py develop --user
 COPY . /opt/app
 RUN ./bin/collectstatic-nosettings.py --env-file ../.env
 
-CMD ["gunicorn", "api.wsgi", "--bind", "0.0.0.0:8080", "--workers", "4", "--worker-class", "gevent", "--access-logfile=-"]
+CMD ["gunicorn", "api.wsgi", "--bind", "0.0.0.0:8080", "--workers", "4", "--worker-class", "gevent", "--reload", "--access-logfile=-"]

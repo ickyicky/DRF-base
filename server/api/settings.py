@@ -51,12 +51,15 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = "api.urls"
 
@@ -126,10 +129,29 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ),
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
 }
 
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {"JWT": {"type": "apiKey", "name": "Authorization", "in": "header"}},
+    "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
+    "DEFAULT_FIELD_INSPECTORS": [
+        "api.docs.inspectors.ModelSerializerInspector",
+        "api.docs.inspectors.ResourceRelatedFieldInspector",
+        "drf_yasg.inspectors.CamelCaseJSONFilter",
+        "drf_yasg.inspectors.ReferencingSerializerInspector",
+        "drf_yasg.inspectors.RelatedFieldInspector",
+        "drf_yasg.inspectors.ChoiceFieldInspector",
+        "drf_yasg.inspectors.FileFieldInspector",
+        "drf_yasg.inspectors.DictFieldInspector",
+        "drf_yasg.inspectors.SimpleFieldInspector",
+        "drf_yasg.inspectors.StringDefaultFieldInspector",
+    ],
 }
 
 if DEBUG:
